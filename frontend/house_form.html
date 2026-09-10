@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>House Price Predictor</title>
+</head>
+
+<body>
+
+  <h1>House Price Predictor</h1>
+
+  <!-- HTML form with 3 inputs -->
+  <form id="house-form">
+
+    <label for="area">Area (m2):</label>
+    <input type="number" id="area" required>
+    <br><br>
+
+    <label for="bedrooms">Bedrooms:</label>
+    <input type="number" id="bedrooms" required>
+    <br><br>
+
+    <label for="location">Location:</label>
+    <select id="location">
+      <option value="hanoi">Hanoi</option>
+      <option value="hcmc">HCMC</option>
+      <option value="other">Other</option>
+    </select>
+    <br><br>
+
+    <button type="submit">Predict price</button>
+  </form>
+
+  <!-- The predicted price will be shown here -->
+  <p id="result"></p>
+
+  <script>
+    // 1. Grab the form and the <p> where should show the result
+    const form = document.getElementById("house-form");
+    const result = document.getElementById("result");
+
+    // 2. Run this function every time the form is submitted
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault(); // stop the page from reloading
+
+      // 3. Read the values the user typed / picked
+      const area = document.getElementById("area").value;
+      const bedrooms = document.getElementById("bedrooms").value;
+      const location = document.getElementById("location").value;
+
+      // 4. Build the request URL. This is a RELATIVE url ("/predict",
+      // not "http://127.0.0.1:8000/predict") because this HTML page
+      // will be served by the same FastAPI app as the API itself,
+      // so the browser fills in the host/port automatically.
+      const url = "/predict?area=" + area + "&bedrooms=" + bedrooms + "&location=" + location;
+
+      try {
+        // 5. Call the API and wait for the JSON response
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // 6. Show the predicted price on the page
+        result.textContent = "Predicted price: " + data.predicted_price.toLocaleString() + " VND";
+      } catch (error) {
+        // 7. If anything goes wrong, show an error instead of crashing
+        result.textContent = "Something went wrong!";
+      }
+    });
+  </script>
+
+</body>
+
+</html>
