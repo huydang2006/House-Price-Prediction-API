@@ -10,7 +10,6 @@
 
   <h1>House Price Predictor</h1>
 
-  <!-- HTML form with 3 inputs -->
   <form id="house-form">
 
     <label for="area">Area (m2):</label>
@@ -21,49 +20,42 @@
     <input type="number" id="bedrooms" required>
     <br><br>
 
-    <label for="location">Location:</label>
-    <select id="location">
-      <option value="hanoi">Hanoi</option>
-      <option value="hcmc">HCMC</option>
-      <option value="other">Other</option>
-    </select>
+    <label for="distance">Distance to center (km):</label>
+    <input type="number" id="distance" step="0.1" required>
     <br><br>
 
     <button type="submit">Predict price</button>
   </form>
 
-  <!-- The predicted price will be shown here -->
   <p id="result"></p>
 
   <script>
-    // 1. Grab the form and the <p> where should show the result
     const form = document.getElementById("house-form");
     const result = document.getElementById("result");
 
-    // 2. Run this function every time the form is submitted
     form.addEventListener("submit", async function (event) {
-      event.preventDefault(); // stop the page from reloading
+      event.preventDefault();
 
-      // 3. Read the values the user typed / picked
-      const area = document.getElementById("area").value;
-      const bedrooms = document.getElementById("bedrooms").value;
-      const location = document.getElementById("location").value;
-
-      // 4. Build the request URL. This is a RELATIVE url ("/predict",
-      // not "http://127.0.0.1:8000/predict") because this HTML page
-      // will be served by the same FastAPI app as the API itself,
-      // so the browser fills in the host/port automatically.
-      const url = "/predict?area=" + area + "&bedrooms=" + bedrooms + "&location=" + location;
+      const area_sqm = Number(document.getElementById("area").value);
+      const bedrooms = Number(document.getElementById("bedrooms").value);
+      const distance_to_center_km = Number(document.getElementById("distance").value);
 
       try {
-        // 5. Call the API and wait for the JSON response
-        const response = await fetch(url);
-        const data = await response.json();
+        // POST + JSON body, since /predict/house-price takes a request body now
+        const response = await fetch("/predict/house-price", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ area_sqm, bedrooms, distance_to_center_km }),
+        });
 
-        // 6. Show the predicted price on the page
-        result.textContent = "Predicted price: " + data.predicted_price.toLocaleString() + " VND";
+        if (!response.ok) {
+          result.textContent = "Invalid input!";
+          return;
+        }
+
+        const data = await response.json();
+        result.textContent = "Predicted price: " + data.predicted_price.toLocaleString() + " " + data.currency;
       } catch (error) {
-        // 7. If anything goes wrong, show an error instead of crashing
         result.textContent = "Something went wrong!";
       }
     });
